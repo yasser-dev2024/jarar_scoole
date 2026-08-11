@@ -30,6 +30,15 @@
 
 `download_page/downloads/SchoolApp.apk`
 
+## iPhone build verification
+
+The iOS application uses bundle identifier
+`sa.edu.kingabdulaziz.schoolapp`. A macOS workflow verifies its source,
+tests, notification sounds, and unsigned application bundle. Only an encrypted
+source archive is stored in this public repository. The unsigned artifact is
+technical build proof; the public installation link must be TestFlight or the
+App Store after Apple signing and review.
+
 ثم حدّث ملف البصمة ومعلومات الإصدار والحجم في `index.html`. لا تغيّر رابط الزر `./downloads/SchoolApp.apk`.
 
 لكي يظهر Android خيار «تحديث» يجب رفع APK برقم `versionCode` أعلى، مع بقاء `applicationId` وشهادة Release كما هما. راجع `../update_workflow.md` لمسار نشر بيانات الديسكتوب والأصوات داخل الإصدار الجديد.

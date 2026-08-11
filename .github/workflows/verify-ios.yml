@@ -1,0 +1,76 @@
+name: Verify iOS application
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/private/ios-source.tar.gz.enc"
+      - ".github/workflows/verify-ios.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout distribution repository
+        uses: actions/checkout@v4
+
+      - name: Decrypt private application source
+        env:
+          SOURCE_PASSWORD: ${{ secrets.IOS_SOURCE_ARCHIVE_PASSWORD }}
+        run: |
+          test -n "$SOURCE_PASSWORD"
+          mkdir ios-source
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+            -in .github/private/ios-source.tar.gz.enc \
+            -out ios-source.tar.gz \
+            -pass env:SOURCE_PASSWORD
+          tar -xzf ios-source.tar.gz -C ios-source
+          rm ios-source.tar.gz
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.32.4
+          channel: stable
+          cache: true
+
+      - name: Resolve packages
+        working-directory: ios-source
+        run: flutter pub get
+
+      - name: Analyze source
+        working-directory: ios-source
+        run: flutter analyze
+
+      - name: Run tests
+        working-directory: ios-source
+        run: flutter test
+
+      - name: Build iPhone application without signing
+        working-directory: ios-source
+        run: flutter build ios --release --no-codesign
+
+      - name: Verify iPhone bundle contents
+        working-directory: ios-source
+        run: |
+          test -d build/ios/iphoneos/Runner.app
+          for sound in school_bell class_start class_end exam_alert; do
+            test -f "build/ios/iphoneos/Runner.app/${sound}.wav"
+          done
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' build/ios/iphoneos/Runner.app/Info.plist)" = "sa.edu.kingabdulaziz.schoolapp"
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/ios/iphoneos/Runner.app build/ios/iphoneos/school-mobile-unsigned.zip
+
+      - name: Upload build proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: school-mobile-ios-unsigned
+          path: ios-source/build/ios/iphoneos/school-mobile-unsigned.zip
+          if-no-files-found: error
+          retention-days: 7
