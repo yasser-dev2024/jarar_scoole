@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#176b87">
-  <meta name="description" content="تنزيل تطبيق العرض المدرسي لأجهزة Android ومتابعة حالة نسخة iPhone: الوقت والحصة الحالية وربط الفصل والمعلم والمادة.">
+  <meta name="description" content="تنزيل تطبيق المدرسة والجرس الذكي لأجهزة Android ومتابعة إتاحته على iPhone عبر Apple.">
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./styles.css">
@@ -21,7 +21,7 @@
           <span class="eyebrow">تطبيق الجوال المدرسي</span>
           <h1 id="app-title">المدرسة والجرس الذكي</h1>
           <p class="lead">شاشة عرض عربية للجوال تعرض الساعة الدائرية والحصة الحالية وربطها بالفصل والمعلم والمادة، مع البحث حسب اليوم أو المعلم أو المادة. التعديل يبقى في برنامج الكمبيوتر ثم يُرفع ملف التحديث إلى الهاتف.</p>
-          <div class="status"><span class="status-dot" aria-hidden="true"></span>Android متاح — نسخة iPhone قيد التجهيز</div>
+          <div class="status"><span class="status-dot" aria-hidden="true"></span>Android متاح — تم بناء iPhone بنجاح وينتظر توقيع Apple</div>
         </div>
       </div>
 
@@ -36,25 +36,25 @@
         <div class="platform-download">
           <a class="download-button iphone-button" href="#iphone-status">
             <span aria-hidden="true">●</span>
-            نسخة iPhone — عرض حالة التجهيز
+            نسخة iPhone — اكتمل البناء
           </a>
-          <p class="platform-note">سيظهر رابط TestFlight أو App Store هنا بعد اعتماد النسخة.</p>
+          <p class="platform-note">تم التحقق على macOS؛ يلزم توقيع Apple لإتاحة رابط التثبيت.</p>
         </div>
       </div>
     </section>
 
     <section class="facts" aria-label="معلومات الإصدار">
-      <article><span>الإصدار</span><strong>1.2.0 (3)</strong></article>
-      <article><span>تاريخ البناء</span><strong>10 أغسطس 2026</strong></article>
+      <article><span>الإصدار</span><strong>1.3.0 (4)</strong></article>
+      <article><span>تاريخ البناء</span><strong>11 أغسطس 2026</strong></article>
       <article><span>حجم APK</span><strong>60.84 MB</strong></article>
-      <article><span>المنصات</span><strong>Android متاح • iPhone قريبًا</strong></article>
+      <article><span>المنصات</span><strong>Android متاح • iOS 13+ بعد توقيع Apple</strong></article>
     </section>
 
     <section class="content-grid">
       <article class="card">
         <h2>التحقق من الملف</h2>
         <p>قارن بصمة SHA-256 بعد التنزيل للتأكد أن الملف لم يتغير.</p>
-        <code id="sha-value">f266f0b3a70cf70b7d617f2b49b5b579d8d481e16740a1d93ec43bc3485d99ef</code>
+        <code id="sha-value">fcbab90c3d07389f8ca6436079331328cd50efe0aaf7e89d779fa5b6ded6c371</code>
         <button id="copy-sha" type="button">نسخ SHA-256</button>
         <a class="text-link" href="./downloads/SchoolApp.apk.sha256" download>تنزيل ملف البصمة</a>
         <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
@@ -91,10 +91,10 @@
 
     <section id="iphone-status" class="iphone-status-card" aria-labelledby="iphone-title">
       <div>
-        <span class="availability-badge">قيد التجهيز</span>
+        <span class="availability-badge">اكتمل البناء</span>
         <h2 id="iphone-title">نسخة iPhone</h2>
-        <p>يجري تجهيز نسخة iOS من تطبيق المدرسة مع الحفاظ على العرض العربي والبيانات المحلية والجرس. لم يصدر بعد رابط TestFlight أو App Store صالح للتثبيت.</p>
-        <p>عند اكتمال البناء والتوقيع والاختبار على iPhone حقيقي، سيتحول الزر أعلاه إلى رابط Apple الرسمي. لا يمكن تثبيت ملف IPA عام مباشرة بالطريقة نفسها المستخدمة مع APK.</p>
+        <p>اكتمل تحويل تطبيق المدرسة إلى iOS ونجح بناؤه واختباره على macOS، مع العرض العربي والبيانات المحلية واستيراد ملفات التحديث وأصوات الجرس والتنبيهات.</p>
+        <p>لا يوجد رابط تثبيت بعد لأن Apple تشترط توقيع التطبيق بشهادة Apple Developer ثم نشره عبر TestFlight أو App Store. عند إضافة التوقيع سيتحول الزر أعلاه إلى رابط Apple الرسمي؛ ملف التطبيق غير الموقّع لا يقبله iPhone.</p>
       </div>
     </section>
 
