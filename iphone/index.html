@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#176b87">
+  <meta name="description" content="تطبيق المدرسة والجرس الذكي للعرض المدرسي على iPhone ويعمل دون إنترنت.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="المدرسة والجرس">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>المدرسة والجرس الذكي</title>
+</head>
+<body>
+  <div id="boot" class="boot" aria-live="polite">
+    <img src="./icons/icon-1024.png" width="150" height="150" alt="">
+    <strong>المدرسة والجرس الذكي</strong>
+    <span>جاري تجهيز بيانات المدرسة…</span>
+    <div class="boot-bar"><i></i></div>
+  </div>
+
+  <main id="app" class="app-shell" hidden>
+    <header class="topbar">
+      <div class="topbar-title">
+        <img src="./icons/icon-192.png" width="44" height="44" alt="">
+        <div>
+          <strong>العرض المدرسي</strong>
+          <span id="connection-state">يعمل محليًا</span>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button id="time-button" class="icon-button" type="button" title="وقت بداية الحصة الأولى" aria-label="وقت بداية الحصة الأولى">◷</button>
+        <button id="bell-button" class="icon-button" type="button" title="تشغيل الجرس" aria-label="تشغيل الجرس">🔔</button>
+        <button id="update-button" class="text-button" type="button"><span>↥</span> تحديث</button>
+        <input id="update-file" type="file" accept=".schooldata,.db,.sqlite,.sqlite3,.json,application/json,application/octet-stream" hidden>
+      </div>
+    </header>
+
+    <section id="install-card" class="install-card" aria-labelledby="install-title">
+      <button id="dismiss-install" class="dismiss" type="button" aria-label="إخفاء">×</button>
+      <div class="install-icon">▣</div>
+      <div>
+        <h1 id="install-title">ثبّت التطبيق على iPhone</h1>
+        <p>من Safari اضغط <strong>مشاركة</strong>، ثم <strong>إضافة إلى الشاشة الرئيسية</strong>، وفعّل <strong>فتح كتطبيق ويب</strong>.</p>
+        <button id="install-help-button" class="primary-button compact" type="button">عرض خطوات التثبيت</button>
+      </div>
+    </section>
+
+    <section class="school-card">
+      <img class="school-logo" src="./icons/icon-1024.png" width="84" height="84" alt="شعار المدرسة">
+      <div>
+        <p class="eyebrow">المدرسة والجرس الذكي</p>
+        <h1 id="school-name">ابتدائية الملك عبدالعزيز بأبها</h1>
+        <p id="school-date" class="muted"></p>
+        <p id="local-start-label" class="local-start"></p>
+      </div>
+    </section>
+
+    <section class="clock-card" aria-live="polite">
+      <div class="clock-ring">
+        <svg viewBox="0 0 320 320" aria-hidden="true">
+          <defs>
+            <linearGradient id="ring-gradient" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#34a5a3"></stop>
+              <stop offset=".58" stop-color="#176b87"></stop>
+              <stop offset="1" stop-color="#f3b61f"></stop>
+            </linearGradient>
+          </defs>
+          <circle class="ring-track" cx="160" cy="160" r="142"></circle>
+          <circle id="ring-progress" class="ring-progress" cx="160" cy="160" r="142"></circle>
+        </svg>
+        <div class="clock-content">
+          <time id="current-time">00:00:00</time>
+          <strong id="period-title">تهيئة الجدول</strong>
+          <span id="period-detail"></span>
+          <b id="countdown"></b>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel controls-panel">
+      <h2>ربط الحصة الحالية</h2>
+      <label>
+        <span>اليوم</span>
+        <select id="day-select"></select>
+      </label>
+      <label>
+        <span>البحث</span>
+        <input id="search-input" type="search" inputmode="search" autocomplete="off" placeholder="اسم المعلم أو المادة أو الفصل">
+      </label>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <h2>الفصل والمعلم والمادة</h2>
+        <span id="links-count" class="count-pill">0</span>
+      </div>
+      <div id="current-links" class="links-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <h2>جدول اليوم</h2>
+        <button id="wake-button" class="subtle-button" type="button">إبقاء الشاشة مضاءة</button>
+      </div>
+      <div id="schedule-list" class="schedule-list"></div>
+    </section>
+
+    <section class="offline-note">
+      <span>✓</span>
+      <p><strong>جاهز للعمل دون إنترنت.</strong> تُحفظ بيانات الجدول ووقت البداية على هذا الجهاز، ويمكن تحديثها من زر «تحديث».</p>
+    </section>
+
+    <footer>
+      <button id="reset-button" type="button">استعادة بيانات التطبيق الأصلية</button>
+      <span>الإصدار 1.0 PWA</span>
+    </footer>
+  </main>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-modal></div>
+    <section class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" type="button" data-close-modal aria-label="إغلاق">×</button>
+      <div id="modal-content"></div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="./vendor/fflate.js" defer></script>
+  <script src="./vendor/sql-wasm.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#176b87">
-  <meta name="description" content="تنزيل تطبيق المدرسة والجرس الذكي لأجهزة Android ومتابعة إتاحته على iPhone عبر Apple.">
+  <meta name="description" content="تنزيل تطبيق المدرسة والجرس الذكي لأجهزة Android وفتح تطبيق iPhone وتثبيته على الشاشة الرئيسية.">
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./styles.css">
@@ -21,7 +21,7 @@
           <span class="eyebrow">تطبيق الجوال المدرسي</span>
           <h1 id="app-title">المدرسة والجرس الذكي</h1>
           <p class="lead">شاشة عرض عربية للجوال تعرض الساعة الدائرية والحصة الحالية وربطها بالفصل والمعلم والمادة، مع البحث حسب اليوم أو المعلم أو المادة. التعديل يبقى في برنامج الكمبيوتر ثم يُرفع ملف التحديث إلى الهاتف.</p>
-          <div class="status"><span class="status-dot" aria-hidden="true"></span>Android متاح — تم بناء iPhone بنجاح وينتظر توقيع Apple</div>
+          <div class="status"><span class="status-dot" aria-hidden="true"></span>Android وiPhone متاحان الآن</div>
         </div>
       </div>
 
@@ -34,11 +34,11 @@
           <p class="platform-note">ملف APK موقّع لأجهزة Android فقط.</p>
         </div>
         <div class="platform-download">
-          <a class="download-button iphone-button" href="#iphone-status">
-            <span aria-hidden="true">●</span>
-            نسخة iPhone — اكتمل البناء
+          <a class="download-button iphone-button" href="./iphone/">
+            <span aria-hidden="true">↗</span>
+            فتح أو تثبيت تطبيق iPhone
           </a>
-          <p class="platform-note">تم التحقق على macOS؛ يلزم توقيع Apple لإتاحة رابط التثبيت.</p>
+          <p class="platform-note">يفتح من Safari ويُضاف إلى الشاشة الرئيسية ويعمل دون إنترنت.</p>
         </div>
       </div>
     </section>
@@ -47,7 +47,7 @@
       <article><span>الإصدار</span><strong>1.3.0 (4)</strong></article>
       <article><span>تاريخ البناء</span><strong>11 أغسطس 2026</strong></article>
       <article><span>حجم APK</span><strong>60.84 MB</strong></article>
-      <article><span>المنصات</span><strong>Android متاح • iOS 13+ بعد توقيع Apple</strong></article>
+      <article><span>المنصات</span><strong>Android • iPhone وiPad</strong></article>
     </section>
 
     <section class="content-grid">
@@ -91,16 +91,22 @@
 
     <section id="iphone-status" class="iphone-status-card" aria-labelledby="iphone-title">
       <div>
-        <span class="availability-badge">اكتمل البناء</span>
-        <h2 id="iphone-title">نسخة iPhone</h2>
-        <p>اكتمل تحويل تطبيق المدرسة إلى iOS ونجح بناؤه واختباره على macOS، مع العرض العربي والبيانات المحلية واستيراد ملفات التحديث وأصوات الجرس والتنبيهات.</p>
-        <p>لا يوجد رابط تثبيت بعد لأن Apple تشترط توقيع التطبيق بشهادة Apple Developer ثم نشره عبر TestFlight أو App Store. عند إضافة التوقيع سيتحول الزر أعلاه إلى رابط Apple الرسمي؛ ملف التطبيق غير الموقّع لا يقبله iPhone.</p>
+        <span class="availability-badge">متاح الآن</span>
+        <h2 id="iphone-title">تثبيت التطبيق على iPhone</h2>
+        <p>اضغط زر «فتح أو تثبيت تطبيق iPhone» أعلاه، ثم نفّذ الخطوات مرة واحدة:</p>
+        <ol>
+          <li>افتح التطبيق في Safari واضغط «مشاركة».</li>
+          <li>اختر «إضافة إلى الشاشة الرئيسية».</li>
+          <li>فعّل «فتح كتطبيق ويب» ثم اضغط «إضافة».</li>
+          <li>افتح أيقونة «المدرسة والجرس» من الشاشة الرئيسية.</li>
+        </ol>
+        <p>بعد أول فتح كامل تُحفظ بيانات المدرسة محليًا ويعمل التطبيق دون إنترنت، ويمكن رفع ملف التحديث من داخل التطبيق.</p>
       </div>
     </section>
 
     <section class="privacy-card">
       <h2>الخصوصية والعمل دون إنترنت</h2>
-      <p>لا تحتوي صفحة التنزيل على إعلانات أو تتبع أو تحليلات. التطبيق يحفظ بيانات المدرسة محليًا ولا يحتاج إلى خادم خارجي لتشغيل وظائفه الأساسية.</p>
+      <p>لا تحتوي صفحة التنزيل على إعلانات أو تتبع أو تحليلات. يحفظ تطبيقا Android وiPhone بيانات المدرسة محليًا ولا يحتاجان إلى خادم خارجي لتشغيل وظائف العرض الأساسية.</p>
       <p>عند نشر إصدار Android أعلى، يحمل APK بيانات العرض الجديدة ويطبقها بعد أخذ نسخة احتياطية، مع إبقاء وقت بداية الحصة الأولى المحدد في كل جوال.</p>
     </section>
   </main>

@@ -23,8 +23,8 @@ a { color: inherit; }
 .eyebrow { display: inline-block; color: var(--primary); font-weight: 800; letter-spacing: .02em; margin-bottom: 8px; }
 h1 { margin: 0; font-size: clamp(2rem,5vw,4rem); line-height: 1.12; letter-spacing: -.04em; }
 .lead { color: var(--muted); font-size: 1.08rem; line-height: 1.9; max-width: 700px; }
-.status { display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; border-radius: 999px; color: #725b09; background: #fff7d3; border: 1px solid #f2dc79; font-size: .9rem; font-weight: 700; }
-.status-dot { width: 9px; height: 9px; background: #e2a900; border-radius: 50%; box-shadow: 0 0 0 4px rgba(226,169,0,.14); }
+.status { display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; border-radius: 999px; color: #23664f; background: #eaf8f0; border: 1px solid #bde4cd; font-size: .9rem; font-weight: 700; }
+.status-dot { width: 9px; height: 9px; background: #32a774; border-radius: 50%; box-shadow: 0 0 0 4px rgba(50,167,116,.14); }
 .download-panel { position: relative; margin-top: 32px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }
 .platform-download { min-width: 0; }
 .download-button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; padding: 17px 24px; border-radius: 16px; background: linear-gradient(135deg,var(--primary),var(--secondary)); color: #fff; text-decoration: none; font-weight: 900; font-size: 1.06rem; box-shadow: 0 14px 28px rgba(23,107,135,.25); transition: transform .2s ease,box-shadow .2s ease; }
@@ -42,8 +42,8 @@ h1 { margin: 0; font-size: clamp(2rem,5vw,4rem); line-height: 1.12; letter-spaci
 .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .card,.privacy-card,.iphone-status-card { padding: clamp(20px,4vw,30px); }
 h2 { margin: 0 0 10px; font-size: 1.25rem; }
-.card p,.privacy-card p,.iphone-status-card p,.card li { color: var(--muted); line-height: 1.8; }
-.card ol { margin: 8px 0 0; padding-right: 22px; }
+.card p,.privacy-card p,.iphone-status-card p,.card li,.iphone-status-card li { color: var(--muted); line-height: 1.8; }
+.card ol,.iphone-status-card ol { margin: 8px 0 0; padding-right: 22px; }
 code { display: block; direction: ltr; text-align: left; padding: 14px; overflow-wrap: anywhere; background: #edf4f6; border-radius: 12px; color: #24495d; font-family: Consolas,monospace; font-size: .78rem; }
 button { border: 0; border-radius: 12px; background: var(--ink); color: #fff; padding: 11px 17px; font: inherit; font-weight: 800; cursor: pointer; margin-top: 12px; }
 .text-link { display: inline-block; margin-right: 12px; color: var(--primary); font-weight: 800; }

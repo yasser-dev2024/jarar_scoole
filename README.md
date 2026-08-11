@@ -1,8 +1,8 @@
-# نشر صفحة تنزيل التطبيق على Netlify
+# نشر تطبيق المدرسة والجرس الذكي
 
 هذا المجلد صفحة Static مستقلة؛ لا يحتاج Node.js أو npm أو خادمًا أو قاعدة بيانات.
 
-تحتوي الصفحة على تنزيل Android الفعلي وحالة نسخة iPhone التي نجح بناؤها على macOS. لا يتحول زر iPhone إلى زر تثبيت إلا بعد توقيع Apple وتوفر رابط TestFlight أو App Store صالح؛ ملف التطبيق غير الموقّع لا يقبله iPhone.
+تحتوي الصفحة على تنزيل Android الفعلي وتطبيق iPhone من نوع PWA. يفتح مستخدم iPhone المسار `/iphone/` في Safari ثم يختار «إضافة إلى الشاشة الرئيسية» و«فتح كتطبيق ويب». بعد أول فتح كامل تُخزن واجهة التطبيق وبيانات المدرسة محليًا للعمل دون إنترنت.
 
 ## النشر عبر GitHub Pages
 
@@ -30,14 +30,12 @@
 
 `download_page/downloads/SchoolApp.apk`
 
-## iPhone build verification
+## تحديث تطبيق iPhone
 
-The iOS application uses bundle identifier
-`sa.edu.kingabdulaziz.schoolapp`. A macOS workflow verifies its source,
-tests, notification sounds, and unsigned application bundle. Only an encrypted
-source archive is stored in this public repository. The unsigned artifact is
-technical build proof; the public installation link must be TestFlight or the
-App Store after Apple signing and review.
+- ملفات التطبيق موجودة في `iphone/`.
+- حدّث `iphone/data/default-data.json` بتشغيل `tools/export_pwa_data.py` على قاعدة البيانات المضمنة.
+- ارفع رقم `CACHE_NAME` في `iphone/sw.js` عند تغيير ملفات التطبيق لضمان وصول التحديث إلى الأجهزة المثبتة.
+- لا تعتمد واجهة iPhone على CDN؛ مكتبات القراءة والأصوات والأيقونات محفوظة داخل الموقع لتعمل دون إنترنت.
 
 ثم حدّث ملف البصمة ومعلومات الإصدار والحجم في `index.html`. لا تغيّر رابط الزر `./downloads/SchoolApp.apk`.
 
