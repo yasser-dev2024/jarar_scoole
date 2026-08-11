@@ -1,0 +1,13 @@
+{
+  "name": "تنزيل تطبيق العرض المدرسي",
+  "short_name": "العرض المدرسي",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f8fa",
+  "theme_color": "#176b87",
+  "icons": [
+    {"src": "./assets/app-icon.png", "sizes": "any", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
