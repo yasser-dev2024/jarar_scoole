@@ -10,7 +10,7 @@
 
 `https://github.com/yasser-dev2024/jarar_scoole`
 
-ترفع ملفات هذا المجلد إلى جذر الفرع `main`. بعد الرفع فعّل GitHub Pages من `Settings > Pages` واختر GitHub Actions أو النشر من جذر فرع `main`. رابط المشروع المتوقع بعد التفعيل:
+ترفع ملفات هذا المجلد إلى جذر الفرع `main`. تم تفعيل GitHub Pages للنشر من جذر الفرع، وأي دفع جديد إلى `main` يعيد نشر الصفحة تلقائيًا.
 
 `https://yasser-dev2024.github.io/jarar_scoole/`
 
