@@ -27,6 +27,9 @@ def main() -> None:
     if not args.source.is_file():
         raise SystemExit(f"SQLite source not found: {args.source}")
 
+    version_file = args.source.with_name("data_version.txt")
+    data_version = int(version_file.read_text("utf-8").strip()) if version_file.is_file() else 1
+
     connection = sqlite3.connect(args.source)
     connection.row_factory = sqlite3.Row
     try:
@@ -57,6 +60,7 @@ def main() -> None:
     payload = {
         "format_version": "pwa-1",
         "app_name": "SchoolOfflineSuite",
+        "data_version": data_version,
         "generated_at": datetime.now(timezone.utc)
         .replace(microsecond=0)
         .isoformat()

@@ -29,6 +29,10 @@ def main() -> None:
     assert required <= data["tables"].keys()
     assert data["tables"]["app_settings"]
     assert data["tables"]["schedule_entries"]
+    assert data.get("data_version", 0) >= 4
+    assert len(data["tables"]["assignments"]) == 462
+    assert len({row["class_id"] for row in data["tables"]["assignments"]}) == 14
+    assert {row["day_of_week"] for row in data["tables"]["assignments"]} == set(range(5))
 
     service_worker = (IPHONE / "sw.js").read_text("utf-8")
     cached_paths = re.findall(r"'\./([^']*)'", service_worker)

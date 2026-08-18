@@ -1,6 +1,7 @@
 'use strict';
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
+const BUNDLED_DATA_VERSION = 4;
 const STORAGE_DB = 'school-smart-pwa';
 const STORAGE_STORE = 'app-data';
 const DATA_KEY = 'dataset';
@@ -32,6 +33,8 @@ const elements = {
   search: document.getElementById('search-input'),
   links: document.getElementById('current-links'),
   linksCount: document.getElementById('links-count'),
+  nextLinks: document.getElementById('next-links'),
+  nextLinksCount: document.getElementById('next-links-count'),
   schedule: document.getElementById('schedule-list'),
   updateButton: document.getElementById('update-button'),
   updateFile: document.getElementById('update-file'),
@@ -49,7 +52,7 @@ const runtime = {
   entries: [],
   scheduleState: null,
   selectedDay: new Date().getDay(),
-  currentEntryId: null,
+  visibleEntriesKey: null,
   bellEnabled: localStorage.getItem(BELL_KEY) === '1',
   lastBellDate: '',
   lastBellSecond: null,
@@ -130,10 +133,10 @@ async function storeValue(key, value) {
 async function defaultData() {
   const response = await fetch(`./data/default-data.json?v=${APP_VERSION}`);
   if (!response.ok) throw new Error('تعذر تحميل بيانات المدرسة الأصلية.');
-  return normalizeData(await response.json());
+  return normalizeData(await response.json(), BUNDLED_DATA_VERSION);
 }
 
-function normalizeData(value) {
+function normalizeData(value, fallbackDataVersion = 0) {
   const source = value && value.tables ? value.tables : value;
   if (!source || typeof source !== 'object') throw new Error('صيغة ملف البيانات غير صحيحة.');
   const tables = {};
@@ -147,6 +150,7 @@ function normalizeData(value) {
   return {
     format_version: 'pwa-1',
     app_name: 'SchoolOfflineSuite',
+    data_version: Number(value?.data_version ?? fallbackDataVersion),
     imported_at: new Date().toISOString(),
     tables,
   };
@@ -254,9 +258,9 @@ function renderClock(now) {
   elements.countdown.textContent = state.remaining > 0 ? countdown(state.remaining) : '';
   const progress = state.status === 'inProgress' || state.status === 'transition' ? Math.max(.01, Math.min(1, state.progress)) : .018;
   elements.ring.style.strokeDashoffset = String(RING_LENGTH * (1 - progress));
-  const currentId = state.current ? Number(state.current.id) : null;
-  if (runtime.currentEntryId !== currentId) {
-    runtime.currentEntryId = currentId;
+  const visibleEntriesKey = `${state.current?.id ?? ''}:${state.next?.id ?? ''}`;
+  if (runtime.visibleEntriesKey !== visibleEntriesKey) {
+    runtime.visibleEntriesKey = visibleEntriesKey;
     renderLinks();
     renderSchedule();
   }
@@ -284,13 +288,12 @@ function renderDayOptions() {
   });
 }
 
-function assignmentRows() {
-  const current = runtime.scheduleState && runtime.scheduleState.current;
-  if (!current) return [];
+function assignmentRows(entry) {
+  if (!entry) return [];
   const classes = new Map(runtime.data.tables.classes.map((row) => [Number(row.id), row]));
   const teachers = new Map(runtime.data.tables.teachers.map((row) => [Number(row.id), row]));
   return runtime.data.tables.assignments
-    .filter((row) => Number(row.day_of_week) === runtime.selectedDay && Number(row.schedule_entry_id) === Number(current.id))
+    .filter((row) => Number(row.day_of_week) === runtime.selectedDay && Number(row.schedule_entry_id) === Number(entry.id))
     .map((row) => ({
       className: classes.get(Number(row.class_id))?.class_name || 'فصل غير محدد',
       teacherName: teachers.get(Number(row.teacher_id))?.teacher_name || 'معلم غير محدد',
@@ -302,24 +305,35 @@ function assignmentRows() {
 function renderLinks() {
   const query = elements.search.value.trim().toLocaleLowerCase('ar');
   const current = runtime.scheduleState && runtime.scheduleState.current;
-  let rows = assignmentRows();
-  if (query) {
-    rows = rows.filter((row) => `${row.className} ${row.teacherName} ${row.subjectName}`.toLocaleLowerCase('ar').includes(query));
-  }
-  elements.linksCount.textContent = String(rows.length);
-  elements.links.replaceChildren();
-  if (!current) {
+  const next = runtime.scheduleState && runtime.scheduleState.next;
+  const filterRows = (entry) => {
+    const rows = assignmentRows(entry);
+    return query
+      ? rows.filter((row) => `${row.className} ${row.teacherName} ${row.subjectName}`.toLocaleLowerCase('ar').includes(query))
+      : rows;
+  };
+  const currentRows = filterRows(current);
+  const nextRows = filterRows(next);
+  elements.linksCount.textContent = String(currentRows.length);
+  elements.nextLinksCount.textContent = String(nextRows.length);
+  renderAssignmentRows(elements.links, current, currentRows, query, 'لا توجد حصة جارية الآن لعرض الربط.');
+  renderAssignmentRows(elements.nextLinks, next, nextRows, query, 'لا توجد حصة قادمة لعرض الربط.');
+}
+
+function renderAssignmentRows(container, entry, rows, query, noEntryMessage) {
+  container.replaceChildren();
+  if (!entry) {
     const empty = document.createElement('div');
     empty.className = 'empty';
-    empty.textContent = 'لا توجد حصة جارية الآن لعرض الربط.';
-    elements.links.append(empty);
+    empty.textContent = noEntryMessage;
+    container.append(empty);
     return;
   }
   if (!rows.length) {
     const empty = document.createElement('div');
     empty.className = 'empty';
     empty.textContent = query ? 'لا توجد نتيجة مطابقة للبحث.' : `لا يوجد ربط لهذه الحصة في ${DAY_NAMES[runtime.selectedDay]}.`;
-    elements.links.append(empty);
+    container.append(empty);
     return;
   }
   for (const row of rows) {
@@ -335,7 +349,7 @@ function renderLinks() {
     subtitle.textContent = `${row.teacherName} • ${row.subjectName}`;
     content.append(title, subtitle);
     item.append(icon, content);
-    elements.links.append(item);
+    container.append(item);
   }
 }
 
@@ -358,7 +372,7 @@ function renderSchedule() {
 
 function refreshDataViews() {
   runtime.entries = shiftedEntries();
-  runtime.currentEntryId = Symbol('refresh');
+  runtime.visibleEntriesKey = Symbol('refresh');
   renderIdentity();
   renderDayOptions();
   renderClock(new Date());
@@ -466,7 +480,7 @@ async function dataFromSqlite(bytes) {
   const database = new runtime.sql.Database(bytes);
   try {
     const tables = Object.fromEntries(REQUIRED_TABLES.map((table) => [table, tableFromSql(database, table)]));
-    return normalizeData({ tables });
+    return { tables };
   } finally {
     database.close();
   }
@@ -478,11 +492,11 @@ async function importUpdate(file) {
   let imported;
   if (extension === 'schooldata') {
     if (!window.fflate) throw new Error('قارئ حزم التحديث غير جاهز.');
-    imported = normalizeData(await verifySchoolData(window.fflate.unzipSync(bytes)));
+    imported = normalizeData(await verifySchoolData(window.fflate.unzipSync(bytes)), BUNDLED_DATA_VERSION);
   } else if (['db', 'sqlite', 'sqlite3'].includes(extension)) {
-    imported = await dataFromSqlite(bytes);
+    imported = normalizeData(await dataFromSqlite(bytes), BUNDLED_DATA_VERSION);
   } else if (extension === 'json') {
-    imported = normalizeData(JSON.parse(new TextDecoder().decode(bytes)));
+    imported = normalizeData(JSON.parse(new TextDecoder().decode(bytes)), BUNDLED_DATA_VERSION);
   } else {
     throw new Error('نوع الملف غير مدعوم.');
   }
@@ -673,11 +687,15 @@ async function start() {
     updateConnectionState();
     elements.bellButton.classList.toggle('is-active', runtime.bellEnabled);
     runtime.data = await safeStoredData();
-    if (!runtime.data) {
-      runtime.data = await defaultData();
-      await safelyStoreData(runtime.data);
-    } else {
-      runtime.data = normalizeData(runtime.data);
+    runtime.data = runtime.data ? normalizeData(runtime.data) : null;
+    try {
+      const bundled = await defaultData();
+      if (!runtime.data || Number(runtime.data.data_version || 0) < Number(bundled.data_version || 0)) {
+        runtime.data = bundled;
+        await safelyStoreData(runtime.data);
+      }
+    } catch (error) {
+      if (!runtime.data) throw error;
     }
     runtime.entries = shiftedEntries();
     refreshDataViews();
