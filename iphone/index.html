@@ -33,7 +33,6 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <button id="time-button" class="icon-button" type="button" title="وقت بداية الحصة الأولى" aria-label="وقت بداية الحصة الأولى">◷</button>
         <button id="bell-button" class="icon-button" type="button" title="تشغيل الجرس" aria-label="تشغيل الجرس">🔔</button>
         <button id="update-button" class="text-button" type="button"><span>↥</span> تحديث</button>
         <input id="update-file" type="file" accept=".schooldata,.db,.sqlite,.sqlite3,.json,application/json,application/octet-stream" hidden>
@@ -56,7 +55,7 @@
         <p class="eyebrow">المدرسة والجرس الذكي</p>
         <h1 id="school-name">ابتدائية الملك عبدالعزيز بأبها</h1>
         <p id="school-date" class="muted"></p>
-        <p id="local-start-label" class="local-start"></p>
+        <p class="local-start">توقيت أم القرى الموحد • مكة المكرمة (UTC+3)</p>
       </div>
     </section>
 
@@ -96,7 +95,7 @@
 
     <section class="panel">
       <div class="section-heading">
-        <h2>الحصة الحالية: الفصل والمعلم والمادة</h2>
+        <h2 id="current-links-title">الحصة الحالية</h2>
         <span id="links-count" class="count-pill">0</span>
       </div>
       <div id="current-links" class="links-list"></div>
@@ -104,7 +103,7 @@
 
     <section class="panel">
       <div class="section-heading">
-        <h2>الحصة القادمة: الفصل والمعلم والمادة</h2>
+        <h2 id="next-links-title">الحصة القادمة</h2>
         <span id="next-links-count" class="count-pill">0</span>
       </div>
       <div id="next-links" class="links-list"></div>
@@ -120,12 +119,12 @@
 
     <section class="offline-note">
       <span>✓</span>
-      <p><strong>جاهز للعمل دون إنترنت.</strong> تُحفظ بيانات الجدول ووقت البداية على هذا الجهاز، ويمكن تحديثها من زر «تحديث».</p>
+      <p><strong>جاهز للعمل دون إنترنت.</strong> يعمل الجدول على توقيت مكة المكرمة الموحد، ويمكن تحديث البيانات من زر «تحديث».</p>
     </section>
 
     <footer>
       <button id="reset-button" type="button">استعادة بيانات التطبيق الأصلية</button>
-      <span>الإصدار 1.0 PWA</span>
+      <span>الإصدار 1.3 PWA</span>
     </footer>
   </main>
 

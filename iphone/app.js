@@ -1,11 +1,11 @@
 'use strict';
 
-const APP_VERSION = '1.1.0';
-const BUNDLED_DATA_VERSION = 4;
+const APP_VERSION = '1.3.0';
+const BUNDLED_DATA_VERSION = 6;
+const SCHOOL_TIME_ZONE = 'Asia/Riyadh';
 const STORAGE_DB = 'school-smart-pwa';
 const STORAGE_STORE = 'app-data';
 const DATA_KEY = 'dataset';
-const LOCAL_START_KEY = 'school-pwa-local-start';
 const BELL_KEY = 'school-pwa-bell-enabled';
 const INSTALL_DISMISSED_KEY = 'school-pwa-install-dismissed';
 const DATA_FALLBACK_KEY = 'school-pwa-dataset-fallback';
@@ -23,7 +23,6 @@ const elements = {
   dismissInstall: document.getElementById('dismiss-install'),
   schoolName: document.getElementById('school-name'),
   schoolDate: document.getElementById('school-date'),
-  localStart: document.getElementById('local-start-label'),
   currentTime: document.getElementById('current-time'),
   periodTitle: document.getElementById('period-title'),
   periodDetail: document.getElementById('period-detail'),
@@ -33,12 +32,13 @@ const elements = {
   search: document.getElementById('search-input'),
   links: document.getElementById('current-links'),
   linksCount: document.getElementById('links-count'),
+  currentLinksTitle: document.getElementById('current-links-title'),
   nextLinks: document.getElementById('next-links'),
   nextLinksCount: document.getElementById('next-links-count'),
+  nextLinksTitle: document.getElementById('next-links-title'),
   schedule: document.getElementById('schedule-list'),
   updateButton: document.getElementById('update-button'),
   updateFile: document.getElementById('update-file'),
-  timeButton: document.getElementById('time-button'),
   bellButton: document.getElementById('bell-button'),
   wakeButton: document.getElementById('wake-button'),
   resetButton: document.getElementById('reset-button'),
@@ -51,7 +51,7 @@ const runtime = {
   data: null,
   entries: [],
   scheduleState: null,
-  selectedDay: new Date().getDay(),
+  selectedDay: saudiNow().getDay(),
   visibleEntriesKey: null,
   bellEnabled: localStorage.getItem(BELL_KEY) === '1',
   lastBellDate: '',
@@ -161,26 +161,25 @@ function secondsOfDay(value) {
   return parts[0] * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
 }
 
-function clockText(value) {
-  const normalized = ((value % 86400) + 86400) % 86400;
-  const hours = Math.floor(normalized / 3600);
-  const minutes = Math.floor((normalized % 3600) / 60);
-  const seconds = normalized % 60;
-  return [hours, minutes, seconds].map((item) => String(item).padStart(2, '0')).join(':');
-}
-
 function shiftedEntries() {
   const entries = runtime.data.tables.schedule_entries
     .map((entry) => ({ ...entry }))
     .sort((left, right) => Number(left.sort_order || 0) - Number(right.sort_order || 0));
-  const firstLesson = entries.find((entry) => entry.entry_type === 'lesson') || entries[0];
-  const localStart = localStorage.getItem(LOCAL_START_KEY);
-  const offset = localStart ? secondsOfDay(localStart) - secondsOfDay(firstLesson.start_time) : 0;
-  return entries.map((entry) => ({
-    ...entry,
-    start_time: clockText(secondsOfDay(entry.start_time) + offset),
-    end_time: clockText(secondsOfDay(entry.end_time) + offset),
-  }));
+  return entries;
+}
+
+function saudiNow(source = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: SCHOOL_TIME_ZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(source);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return new Date(
+    Number(values.year), Number(values.month) - 1, Number(values.day),
+    Number(values.hour), Number(values.minute), Number(values.second),
+  );
 }
 
 function settings() {
@@ -266,14 +265,12 @@ function renderClock(now) {
   }
 }
 
-function renderIdentity(now = new Date()) {
+function renderIdentity(now = saudiNow()) {
   elements.schoolName.textContent = settings().school_name || 'ابتدائية الملك عبدالعزيز بأبها';
   const date = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', {
     weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit',
   }).format(now);
   elements.schoolDate.textContent = date;
-  const localStart = localStorage.getItem(LOCAL_START_KEY);
-  elements.localStart.textContent = localStart ? `بداية الحصة الأولى في هذا الجهاز: ${localStart.slice(0, 5)}` : '';
 }
 
 function renderDayOptions() {
@@ -314,6 +311,12 @@ function renderLinks() {
   };
   const currentRows = filterRows(current);
   const nextRows = filterRows(next);
+  elements.currentLinksTitle.textContent = current
+    ? `الحصة الحالية: ${current.title}`
+    : 'الحصة الحالية: لا توجد';
+  elements.nextLinksTitle.textContent = next
+    ? `الحصة القادمة: ${next.title}`
+    : 'الحصة القادمة: لا توجد';
   elements.linksCount.textContent = String(currentRows.length);
   elements.nextLinksCount.textContent = String(nextRows.length);
   renderAssignmentRows(elements.links, current, currentRows, query, 'لا توجد حصة جارية الآن لعرض الربط.');
@@ -336,21 +339,27 @@ function renderAssignmentRows(container, entry, rows, query, noEntryMessage) {
     container.append(empty);
     return;
   }
-  for (const row of rows) {
-    const item = document.createElement('article');
-    item.className = 'link-row';
-    const icon = document.createElement('span');
-    icon.className = 'link-icon';
-    icon.textContent = '⌂';
-    const content = document.createElement('div');
-    const title = document.createElement('strong');
-    title.textContent = row.className;
-    const subtitle = document.createElement('span');
-    subtitle.textContent = `${row.teacherName} • ${row.subjectName}`;
-    content.append(title, subtitle);
-    item.append(icon, content);
-    container.append(item);
-  }
+  const table = document.createElement('div');
+  table.className = 'assignment-table';
+  table.append(assignmentTableRow(['#', 'الفصل', 'المعلم', 'المادة'], 'assignment-table-head'));
+  rows.forEach((row, index) => {
+    table.append(assignmentTableRow(
+      [String(index + 1), row.className, row.teacherName, row.subjectName],
+      `assignment-table-body palette-${index % 6}`,
+    ));
+  });
+  container.append(table);
+}
+
+function assignmentTableRow(values, className) {
+  const row = document.createElement('div');
+  row.className = `assignment-table-row ${className}`;
+  values.forEach((value) => {
+    const cell = document.createElement('span');
+    cell.textContent = value;
+    row.append(cell);
+  });
+  return row;
 }
 
 function renderSchedule() {
@@ -375,7 +384,7 @@ function refreshDataViews() {
   runtime.visibleEntriesKey = Symbol('refresh');
   renderIdentity();
   renderDayOptions();
-  renderClock(new Date());
+  renderClock(saudiNow());
   renderLinks();
   renderSchedule();
 }
@@ -413,31 +422,6 @@ function closeModal() {
   elements.modal.hidden = true;
   elements.modalContent.replaceChildren();
   document.body.style.overflow = '';
-}
-
-function showTimeDialog(firstRun = false) {
-  const first = runtime.entries.find((entry) => entry.entry_type === 'lesson') || runtime.entries[0];
-  const value = (localStorage.getItem(LOCAL_START_KEY) || first.start_time).slice(0, 5);
-  openModal(`
-    <h2 id="modal-title">وقت بداية الحصة الأولى</h2>
-    <p>${firstRun ? 'حدد وقت البداية لهذا الجهاز. ' : ''}سيحسب التطبيق بقية الحصص والفواصل تلقائيًا مع الحفاظ على مددها.</p>
-    <label><span>وقت البداية</span><input id="first-start-input" type="time" value="${value}" required></label>
-    <div class="form-actions">
-      <button id="save-start-button" class="primary-button" type="button">اعتماد الوقت</button>
-      ${firstRun ? '' : '<button class="subtle-button" type="button" data-close-modal>إلغاء</button>'}
-    </div>
-  `);
-  document.getElementById('save-start-button').addEventListener('click', () => {
-    const selected = document.getElementById('first-start-input').value;
-    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(selected)) {
-      showToast('حدد وقتًا صحيحًا.', true);
-      return;
-    }
-    localStorage.setItem(LOCAL_START_KEY, `${selected}:00`);
-    closeModal();
-    refreshDataViews();
-    showToast(`تم اعتماد بداية الحصة الأولى ${selected}.`);
-  });
 }
 
 function showToast(message, error = false) {
@@ -636,7 +620,6 @@ function bindEvents() {
       elements.updateFile.value = '';
     }
   });
-  elements.timeButton.addEventListener('click', () => showTimeDialog(false));
   elements.bellButton.addEventListener('click', toggleBell);
   elements.wakeButton.addEventListener('click', requestWakeLock);
   elements.installHelp.addEventListener('click', async () => {
@@ -656,7 +639,7 @@ function bindEvents() {
     if (event.target.closest('[data-close-modal]')) closeModal();
   });
   elements.resetButton.addEventListener('click', async () => {
-    if (!window.confirm('هل تريد استعادة بيانات التطبيق الأصلية؟ سيبقى وقت بداية الحصة الأولى محفوظًا.')) return;
+    if (!window.confirm('هل تريد استعادة بيانات التطبيق الأصلية؟')) return;
     try {
       runtime.data = await defaultData();
       await safelyStoreData(runtime.data);
@@ -682,6 +665,7 @@ function bindEvents() {
 
 async function start() {
   try {
+    localStorage.removeItem('school-pwa-local-start');
     bindEvents();
     renderInstallState();
     updateConnectionState();
@@ -701,9 +685,8 @@ async function start() {
     refreshDataViews();
     elements.app.hidden = false;
     elements.boot.hidden = true;
-    if (!localStorage.getItem(LOCAL_START_KEY)) setTimeout(() => showTimeDialog(true), 350);
     setInterval(() => {
-      const now = new Date();
+      const now = saudiNow();
       renderClock(now);
       checkBell(now);
       if (now.getSeconds() === 0) renderIdentity(now);

@@ -203,10 +203,18 @@ input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
 .section-heading h2 { margin: 0; }
 .count-pill { min-width: 29px; padding: 5px 8px; border-radius: 999px; color: var(--primary); background: var(--sky); text-align: center; font-size: .8rem; font-weight: 900; }
 .links-list { display: grid; gap: 9px; }
-.link-row { display: grid; grid-template-columns: 44px 1fr; gap: 11px; align-items: center; padding: 12px; border: 1px solid #d5e8ef; border-radius: 17px; background: var(--sky); }
-.link-icon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 50%; color: var(--primary); background: #fff; font-size: 1.15rem; }
-.link-row strong { display: block; font-size: 1rem; }
-.link-row span { display: block; margin-top: 2px; color: var(--muted); font-size: .86rem; }
+.assignment-table { overflow: hidden; border: 1px solid #c8d8ea; border-radius: 14px; }
+.assignment-table-row { direction: rtl; display: grid; grid-template-columns: .45fr 1fr 2fr 1.5fr; align-items: stretch; border-bottom: 1px solid #d9e4ef; }
+.assignment-table-row:last-child { border-bottom: 0; }
+.assignment-table-row span { display: grid; min-width: 0; place-items: center; padding: 10px 4px; text-align: center; font-size: .83rem; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
+.assignment-table-head { color: var(--navy); background: #e4eefb; }
+.assignment-table-head span { padding-top: 11px; padding-bottom: 11px; font-weight: 900; }
+.palette-0 { color: #1e3a8a; background: #eff6ff; }
+.palette-1 { color: #14532d; background: #f0fdf4; }
+.palette-2 { color: #4a1d96; background: #faf5ff; }
+.palette-3 { color: #7c2d12; background: #fff7ed; }
+.palette-4 { color: #7f1d1d; background: #fef2f2; }
+.palette-5 { color: #0c4a6e; background: #f0f9ff; }
 .empty { padding: 23px 12px; color: var(--muted); text-align: center; line-height: 1.7; }
 
 .subtle-button { padding: 8px 11px; color: var(--primary); background: var(--sky); font-size: .76rem; }
@@ -260,6 +268,7 @@ body.standalone .install-card { display: none; }
   .controls-panel { grid-template-columns: 1fr; }
   .controls-panel h2 { grid-column: auto; }
   .panel { padding: 15px; }
+  .assignment-table-row span { padding-right: 2px; padding-left: 2px; font-size: .76rem; }
   .schedule-row { grid-template-columns: 54px 1fr; }
   .schedule-row small { grid-column: 2; }
 }
