@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'school-smart-pwa-v1.3.0';
+const CACHE_NAME = 'school-smart-pwa-v1.4.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -14,6 +14,23 @@ const APP_SHELL = [
   './sounds/school_bell.wav',
   './sounds/class_start.wav',
   './sounds/class_end.wav',
+  './sounds/period_1_start.mp3',
+  './sounds/period_1_end.mp3',
+  './sounds/period_2_start.mp3',
+  './sounds/period_2_end.mp3',
+  './sounds/period_3_start.mp3',
+  './sounds/period_3_end.mp3',
+  './sounds/period_4_start.mp3',
+  './sounds/period_4_end.mp3',
+  './sounds/period_5_start.mp3',
+  './sounds/period_5_end.mp3',
+  './sounds/period_6_start.mp3',
+  './sounds/period_6_end.mp3',
+  './sounds/period_7_start.mp3',
+  './sounds/period_7_end.mp3',
+  './sounds/break_start.mp3',
+  './sounds/break_end.mp3',
+  './sounds/break_end_start_period_4.mp3',
   './vendor/fflate.js',
   './vendor/sql-wasm.js',
   './vendor/sql-wasm.wasm',

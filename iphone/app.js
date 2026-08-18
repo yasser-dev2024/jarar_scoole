@@ -1,8 +1,9 @@
 'use strict';
 
-const APP_VERSION = '1.3.0';
-const BUNDLED_DATA_VERSION = 6;
+const APP_VERSION = '1.4.0';
+const BUNDLED_DATA_VERSION = 7;
 const SCHOOL_TIME_ZONE = 'Asia/Riyadh';
+const MINIMUM_BELL_GAP_MS = 2000;
 const STORAGE_DB = 'school-smart-pwa';
 const STORAGE_STORE = 'app-data';
 const DATA_KEY = 'dataset';
@@ -56,6 +57,7 @@ const runtime = {
   bellEnabled: localStorage.getItem(BELL_KEY) === '1',
   lastBellDate: '',
   lastBellSecond: null,
+  bellAudioChain: Promise.resolve(),
   wakeLock: null,
   keepAwake: false,
   deferredInstallPrompt: null,
@@ -489,10 +491,28 @@ async function importUpdate(file) {
   refreshDataViews();
 }
 
-async function unlockAndPlay(sound = 'school_bell') {
-  const audio = new Audio(`./sounds/${sound}.wav`);
+function bellSoundUrl(sound) {
+  const value = String(sound || 'asset:sounds/school_bell.wav');
+  if (value.startsWith('asset:sounds/')) return `./sounds/${value.slice('asset:sounds/'.length)}`;
+  if (value.startsWith('./sounds/')) return value;
+  if (/^[a-z0-9_]+$/i.test(value)) return `./sounds/${value}.wav`;
+  return './sounds/school_bell.wav';
+}
+
+async function unlockAndPlay(sound = 'asset:sounds/school_bell.wav', waitForEnd = false) {
+  const audio = new Audio(bellSoundUrl(sound));
   audio.preload = 'auto';
+  const ended = new Promise((resolve) => {
+    const finish = () => resolve();
+    audio.addEventListener('ended', finish, { once: true });
+    audio.addEventListener('error', finish, { once: true });
+    setTimeout(finish, 60000);
+  });
   await audio.play();
+  if (waitForEnd) {
+    await ended;
+    await new Promise((resolve) => setTimeout(resolve, MINIMUM_BELL_GAP_MS));
+  }
 }
 
 async function requestNotifications() {
@@ -519,8 +539,12 @@ async function notifyBell(title) {
 }
 
 async function ringBell(entry, eventType) {
-  const sound = eventType === 'start' ? 'class_start' : 'class_end';
-  try { await unlockAndPlay(sound); } catch (_) { /* A first user tap may still be required by Safari. */ }
+  const sound = entry[`bell_${eventType}_sound`] || settings().bell_sound_path
+    || `asset:sounds/class_${eventType}.wav`;
+  runtime.bellAudioChain = runtime.bellAudioChain
+    .catch(() => {})
+    .then(() => unlockAndPlay(sound, true))
+    .catch(() => { /* Safari may still require an explicit bell-button tap. */ });
   await notifyBell(`${eventType === 'start' ? 'بداية' : 'نهاية'} ${entry.title}`);
   if ('setAppBadge' in navigator) {
     try { await navigator.setAppBadge(1); } catch (_) { /* Optional enhancement. */ }
@@ -543,6 +567,7 @@ function checkBell(now) {
   const firedTimes = new Set();
   for (const entry of runtime.entries) {
     for (const eventType of ['start', 'end']) {
+      if (Number(entry[`bell_${eventType}_enabled`] || 0) !== 1) continue;
       const target = secondsOfDay(entry[`${eventType}_time`]);
       if (target > runtime.lastBellSecond && target <= currentSecond && !firedTimes.has(target)) {
         firedTimes.add(target);
