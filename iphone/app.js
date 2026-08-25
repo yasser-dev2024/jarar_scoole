@@ -14,6 +14,8 @@ const TRANSFER_SIGNING_KEY = 'SchoolOfflineSuite-DataTransfer-Integrity-2026';
 const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const REQUIRED_TABLES = ['app_settings', 'schedule_entries', 'classes', 'teachers', 'assignments'];
 const RING_LENGTH = 2 * Math.PI * 142;
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
 const elements = {
   app: document.getElementById('app'),
@@ -58,6 +60,7 @@ const runtime = {
   lastBellDate: '',
   lastBellSecond: null,
   bellAudioChain: Promise.resolve(),
+  bellAudio: null,
   wakeLock: null,
   keepAwake: false,
   deferredInstallPrompt: null,
@@ -500,8 +503,18 @@ function bellSoundUrl(sound) {
 }
 
 async function unlockAndPlay(sound = 'asset:sounds/school_bell.wav', waitForEnd = false) {
-  const audio = new Audio(bellSoundUrl(sound));
+  const soundUrl = bellSoundUrl(sound);
+  const audio = IS_IOS
+    ? (runtime.bellAudio || (runtime.bellAudio = new Audio()))
+    : new Audio(soundUrl);
+  if (IS_IOS && audio.getAttribute('src') !== soundUrl) {
+    audio.src = soundUrl;
+  }
   audio.preload = 'auto';
+  if (IS_IOS) {
+    audio.pause();
+    try { audio.currentTime = 0; } catch (_) { /* The new source is not seekable until Safari loads it. */ }
+  }
   const ended = new Promise((resolve) => {
     const finish = () => resolve();
     audio.addEventListener('ended', finish, { once: true });
