@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'school-smart-pwa-v1.4.1-schedule-8-ios-bell';
+const CACHE_NAME = 'school-smart-pwa-v1.5.0-schedule-9-waiting-ios-bell';
 const APP_SHELL = [
   './',
   './index.html',

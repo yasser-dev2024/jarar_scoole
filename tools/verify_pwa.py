@@ -26,11 +26,12 @@ def main() -> None:
         "classes",
         "teachers",
         "assignments",
+        "waiting_allocations",
     }
     assert required <= data["tables"].keys()
     assert data["tables"]["app_settings"]
     assert data["tables"]["schedule_entries"]
-    assert data.get("data_version", 0) >= 8
+    assert data.get("data_version", 0) >= 9
     assert len(data["tables"]["assignments"]) == 462
     assert len({row["class_id"] for row in data["tables"]["assignments"]}) == 14
     assert {row["day_of_week"] for row in data["tables"]["assignments"]} == set(range(5))
@@ -63,12 +64,23 @@ def main() -> None:
         teachers[row["teacher_id"]] == "عبدالكريم القحطاني"
         for row in data["tables"]["assignments"]
     )
+    waiting = data["tables"]["waiting_allocations"]
+    assert len(waiting) == 31
+    assert [sum(int(row[key]) for row in waiting) for key in (
+        "waiting_1", "waiting_2", "waiting_3", "reserve_count"
+    )] == [33, 33, 33, 99]
+    waiting_by_order = {int(row["display_order"]): row for row in waiting}
+    assert waiting_by_order[1]["teacher_name"] == "علي الفيفي"
+    assert waiting_by_order[1]["waiting_1"] == 2
+    assert waiting_by_order[8]["reserve_count"] == 0
+    assert waiting_by_order[24]["teacher_name"] == "بكري عسيري"
+    assert waiting_by_order[31]["waiting_3"] == 1
 
     service_worker = (IPHONE / "sw.js").read_text("utf-8")
     application = (IPHONE / "app.js").read_text("utf-8")
     styles = (IPHONE / "styles.css").read_text("utf-8")
-    assert "const APP_VERSION = '1.4.1';" in application
-    assert "const BUNDLED_DATA_VERSION = 8;" in application
+    assert "const APP_VERSION = '1.5.0';" in application
+    assert "const BUNDLED_DATA_VERSION = 9;" in application
     assert "const SCHOOL_TIME_ZONE = 'Asia/Riyadh';" in application
     assert "const MINIMUM_BELL_GAP_MS = 2000;" in application
     assert "timeZone: SCHOOL_TIME_ZONE" in application
@@ -81,7 +93,11 @@ def main() -> None:
     assert "const IS_IOS = /iPad|iPhone|iPod/" in application
     assert "runtime.bellAudio || (runtime.bellAudio = new Audio())" in application
     assert "audio.pause();" in application
-    assert "school-smart-pwa-v1.4.1-schedule-8-ios-bell" in service_worker
+    assert "showWaitingDistribution" in application
+    assert "waiting_allocations" in application
+    assert 'id="waiting-button"' in (IPHONE / "index.html").read_text("utf-8")
+    assert "waiting-fab" in styles
+    assert "school-smart-pwa-v1.5.0-schedule-9-waiting-ios-bell" in service_worker
     expected_sounds = {
         *(f"period_{number}_{event}.mp3" for number in range(1, 8) for event in ("start", "end")),
         "break_start.mp3",
@@ -100,7 +116,7 @@ def main() -> None:
     landing_page = (ROOT / "index.html").read_text("utf-8")
     assert 'href="./iphone/"' in landing_page
     assert "Android وiPhone متاحان الآن" in landing_page
-    assert "1.4.4 (9)" in landing_page
+    assert "1.5.0 (10)" in landing_page
     apk = ROOT / "downloads" / "SchoolApp.apk"
     apk_digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     checksum = (ROOT / "downloads" / "SchoolApp.apk.sha256").read_text("utf-8")

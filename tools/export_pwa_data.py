@@ -15,6 +15,7 @@ TABLES = (
     "classes",
     "teachers",
     "assignments",
+    "waiting_allocations",
 )
 
 

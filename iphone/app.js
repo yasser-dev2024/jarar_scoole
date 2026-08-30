@@ -1,7 +1,7 @@
 'use strict';
 
-const APP_VERSION = '1.4.1';
-const BUNDLED_DATA_VERSION = 8;
+const APP_VERSION = '1.5.0';
+const BUNDLED_DATA_VERSION = 9;
 const SCHOOL_TIME_ZONE = 'Asia/Riyadh';
 const MINIMUM_BELL_GAP_MS = 2000;
 const STORAGE_DB = 'school-smart-pwa';
@@ -13,6 +13,7 @@ const DATA_FALLBACK_KEY = 'school-pwa-dataset-fallback';
 const TRANSFER_SIGNING_KEY = 'SchoolOfflineSuite-DataTransfer-Integrity-2026';
 const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const REQUIRED_TABLES = ['app_settings', 'schedule_entries', 'classes', 'teachers', 'assignments'];
+const OPTIONAL_TABLES = ['waiting_allocations'];
 const RING_LENGTH = 2 * Math.PI * 142;
 const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -44,6 +45,7 @@ const elements = {
   updateFile: document.getElementById('update-file'),
   bellButton: document.getElementById('bell-button'),
   wakeButton: document.getElementById('wake-button'),
+  waitingButton: document.getElementById('waiting-button'),
   resetButton: document.getElementById('reset-button'),
   modal: document.getElementById('modal'),
   modalContent: document.getElementById('modal-content'),
@@ -141,13 +143,17 @@ async function defaultData() {
   return normalizeData(await response.json(), BUNDLED_DATA_VERSION);
 }
 
-function normalizeData(value, fallbackDataVersion = 0) {
+function normalizeData(value, fallbackDataVersion = 0, fallbackTables = null) {
   const source = value && value.tables ? value.tables : value;
   if (!source || typeof source !== 'object') throw new Error('صيغة ملف البيانات غير صحيحة.');
   const tables = {};
   for (const table of REQUIRED_TABLES) {
     if (!Array.isArray(source[table])) throw new Error(`الملف لا يحتوي جدول ${table}.`);
     tables[table] = source[table].map((row) => ({ ...row }));
+  }
+  for (const table of OPTIONAL_TABLES) {
+    const rows = Array.isArray(source[table]) ? source[table] : fallbackTables?.[table];
+    tables[table] = Array.isArray(rows) ? rows.map((row) => ({ ...row })) : [];
   }
   if (!tables.app_settings.length || !tables.schedule_entries.length) {
     throw new Error('ملف البيانات لا يحتوي إعدادات وجدولًا صالحًا.');
@@ -384,6 +390,82 @@ function renderSchedule() {
   }
 }
 
+function normalizedArabicSearch(value) {
+  return String(value || '')
+    .toLocaleLowerCase('ar')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function showWaitingDistribution() {
+  const rows = runtime.data.tables.waiting_allocations || [];
+  const total = (key) => rows.reduce((sum, row) => sum + Number(row[key] || 0), 0);
+  openModal(`
+    <h2 id="modal-title">📋 توزيع حصص الانتظار</h2>
+    <p class="waiting-summary">${rows.length} معلم • انتظار 1: ${total('waiting_1')} • انتظار 2: ${total('waiting_2')} • انتظار 3: ${total('waiting_3')} • الاحتياط: ${total('reserve_count')}</p>
+    <label class="waiting-search-label">
+      <span>البحث</span>
+      <input id="waiting-search" type="search" inputmode="search" autocomplete="off" placeholder="اسم المعلم أو المادة">
+    </label>
+    <p id="waiting-result-count" class="waiting-result-count"></p>
+    <div id="waiting-results" class="waiting-results"></div>
+  `);
+  const search = document.getElementById('waiting-search');
+  const container = document.getElementById('waiting-results');
+  const resultCount = document.getElementById('waiting-result-count');
+
+  const render = () => {
+    const query = normalizedArabicSearch(search.value);
+    const filtered = rows.filter((row) => !query || normalizedArabicSearch(
+      `${row.teacher_name} ${row.subject_name}`,
+    ).includes(query));
+    resultCount.textContent = `النتائج: ${filtered.length}`;
+    container.replaceChildren();
+    if (!filtered.length) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = rows.length ? 'لا توجد نتيجة مطابقة للبحث.' : 'لا توجد بيانات لتوزيع حصص الانتظار.';
+      container.append(empty);
+      return;
+    }
+    filtered.forEach((row) => {
+      const card = document.createElement('article');
+      card.className = 'waiting-card';
+      const number = document.createElement('b');
+      number.className = 'waiting-order';
+      number.textContent = String(row.display_order || '');
+      const identity = document.createElement('div');
+      identity.className = 'waiting-identity';
+      const name = document.createElement('strong');
+      name.textContent = row.teacher_name || '';
+      const subject = document.createElement('span');
+      subject.textContent = row.subject_name || '';
+      identity.append(name, subject);
+      const counts = document.createElement('div');
+      counts.className = 'waiting-counts';
+      [
+        ['انتظار 1', row.waiting_1],
+        ['انتظار 2', row.waiting_2],
+        ['انتظار 3', row.waiting_3],
+        ['احتياط', row.reserve_count],
+      ].forEach(([label, value], index) => {
+        const chip = document.createElement('span');
+        chip.className = `waiting-chip${index === 3 ? ' reserve' : ''}`;
+        chip.textContent = `${label}: ${Number(value || 0) || '×'}`;
+        counts.append(chip);
+      });
+      card.append(number, identity, counts);
+      container.append(card);
+    });
+  };
+  search.addEventListener('input', render);
+  render();
+  search.focus();
+}
+
 function refreshDataViews() {
   runtime.entries = shiftedEntries();
   runtime.visibleEntriesKey = Symbol('refresh');
@@ -469,6 +551,9 @@ async function dataFromSqlite(bytes) {
   const database = new runtime.sql.Database(bytes);
   try {
     const tables = Object.fromEntries(REQUIRED_TABLES.map((table) => [table, tableFromSql(database, table)]));
+    for (const table of OPTIONAL_TABLES) {
+      try { tables[table] = tableFromSql(database, table); } catch (_) { /* Optional for older backups. */ }
+    }
     return { tables };
   } finally {
     database.close();
@@ -481,11 +566,19 @@ async function importUpdate(file) {
   let imported;
   if (extension === 'schooldata') {
     if (!window.fflate) throw new Error('قارئ حزم التحديث غير جاهز.');
-    imported = normalizeData(await verifySchoolData(window.fflate.unzipSync(bytes)), BUNDLED_DATA_VERSION);
+    imported = normalizeData(
+      await verifySchoolData(window.fflate.unzipSync(bytes)),
+      BUNDLED_DATA_VERSION,
+      runtime.data?.tables,
+    );
   } else if (['db', 'sqlite', 'sqlite3'].includes(extension)) {
-    imported = normalizeData(await dataFromSqlite(bytes), BUNDLED_DATA_VERSION);
+    imported = normalizeData(await dataFromSqlite(bytes), BUNDLED_DATA_VERSION, runtime.data?.tables);
   } else if (extension === 'json') {
-    imported = normalizeData(JSON.parse(new TextDecoder().decode(bytes)), BUNDLED_DATA_VERSION);
+    imported = normalizeData(
+      JSON.parse(new TextDecoder().decode(bytes)),
+      BUNDLED_DATA_VERSION,
+      runtime.data?.tables,
+    );
   } else {
     throw new Error('نوع الملف غير مدعوم.');
   }
@@ -660,6 +753,7 @@ function bindEvents() {
   });
   elements.bellButton.addEventListener('click', toggleBell);
   elements.wakeButton.addEventListener('click', requestWakeLock);
+  elements.waitingButton.addEventListener('click', showWaitingDistribution);
   elements.installHelp.addEventListener('click', async () => {
     if (runtime.deferredInstallPrompt) {
       runtime.deferredInstallPrompt.prompt();
