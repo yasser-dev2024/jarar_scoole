@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -29,7 +30,7 @@ def main() -> None:
     assert required <= data["tables"].keys()
     assert data["tables"]["app_settings"]
     assert data["tables"]["schedule_entries"]
-    assert data.get("data_version", 0) >= 7
+    assert data.get("data_version", 0) >= 8
     assert len(data["tables"]["assignments"]) == 462
     assert len({row["class_id"] for row in data["tables"]["assignments"]}) == 14
     assert {row["day_of_week"] for row in data["tables"]["assignments"]} == set(range(5))
@@ -42,12 +43,32 @@ def main() -> None:
     assert lessons[1]["start_time"] == "07:45:18"
     assert lessons[1]["end_time"] == "08:30:18"
     assert lessons[2]["title"] == "الحصة الثالثة"
+    classes = {row["id"]: row["class_name"] for row in data["tables"]["classes"]}
+    teachers = {row["id"]: row["teacher_name"] for row in data["tables"]["teachers"]}
+    period_by_entry = {row["id"]: index + 1 for index, row in enumerate(lessons)}
+    assignments = {
+        (
+            classes[row["class_id"]],
+            row["day_of_week"],
+            period_by_entry[row["schedule_entry_id"]],
+        ): (row["subject_name"], teachers[row["teacher_id"]])
+        for row in data["tables"]["assignments"]
+    }
+    assert assignments[("1/4", 0, 2)] == ("علوم", "أحمد الخيري")
+    assert assignments[("1/4", 0, 3)] == ("القران والدراسات", "عبدالرحمن ال حموض")
+    assert assignments[("4/4", 3, 5)] == ("رياضيات", "بريق القرني")
+    assert assignments[("4/5", 4, 4)] == ("رياضيات", "حسين الزيداني")
+    assert assignments[("5/5", 2, 3)] == ("نشاط", "بكري عسيري")
+    assert not any(
+        teachers[row["teacher_id"]] == "عبدالكريم القحطاني"
+        for row in data["tables"]["assignments"]
+    )
 
     service_worker = (IPHONE / "sw.js").read_text("utf-8")
     application = (IPHONE / "app.js").read_text("utf-8")
     styles = (IPHONE / "styles.css").read_text("utf-8")
-    assert "const APP_VERSION = '1.4.0';" in application
-    assert "const BUNDLED_DATA_VERSION = 7;" in application
+    assert "const APP_VERSION = '1.4.1';" in application
+    assert "const BUNDLED_DATA_VERSION = 8;" in application
     assert "const SCHOOL_TIME_ZONE = 'Asia/Riyadh';" in application
     assert "const MINIMUM_BELL_GAP_MS = 2000;" in application
     assert "timeZone: SCHOOL_TIME_ZONE" in application
@@ -57,6 +78,10 @@ def main() -> None:
     assert "bell_${eventType}_enabled" in application
     assert "bell_${eventType}_sound" in application
     assert "bellAudioChain" in application
+    assert "const IS_IOS = /iPad|iPhone|iPod/" in application
+    assert "runtime.bellAudio || (runtime.bellAudio = new Audio())" in application
+    assert "audio.pause();" in application
+    assert "school-smart-pwa-v1.4.1-schedule-8-ios-bell" in service_worker
     expected_sounds = {
         *(f"period_{number}_{event}.mp3" for number in range(1, 8) for event in ("start", "end")),
         "break_start.mp3",
@@ -75,6 +100,12 @@ def main() -> None:
     landing_page = (ROOT / "index.html").read_text("utf-8")
     assert 'href="./iphone/"' in landing_page
     assert "Android وiPhone متاحان الآن" in landing_page
+    assert "1.4.4 (9)" in landing_page
+    apk = ROOT / "downloads" / "SchoolApp.apk"
+    apk_digest = hashlib.sha256(apk.read_bytes()).hexdigest()
+    checksum = (ROOT / "downloads" / "SchoolApp.apk.sha256").read_text("utf-8")
+    assert checksum.split()[0] == apk_digest
+    assert apk_digest in landing_page
     forbidden = ("ينتظر توقيع", "TestFlight", "غير الموقّع", "Apple Developer")
     assert not any(text in landing_page for text in forbidden)
 

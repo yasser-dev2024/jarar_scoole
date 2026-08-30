@@ -1,7 +1,7 @@
 'use strict';
 
-const APP_VERSION = '1.4.0';
-const BUNDLED_DATA_VERSION = 7;
+const APP_VERSION = '1.4.1';
+const BUNDLED_DATA_VERSION = 8;
 const SCHOOL_TIME_ZONE = 'Asia/Riyadh';
 const MINIMUM_BELL_GAP_MS = 2000;
 const STORAGE_DB = 'school-smart-pwa';
