@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#176b87">
-  <meta name="description" content="تطبيق المدرسة والجرس الذكي للعرض المدرسي على iPhone ويعمل دون إنترنت.">
+  <meta name="description" content="تطبيق المدرسة والجرس الذكي للعرض المدرسي على Android وiPhone ويعمل دون إنترنت.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -34,8 +34,6 @@
       </div>
       <div class="topbar-actions">
         <button id="bell-button" class="icon-button" type="button" title="تشغيل الجرس" aria-label="تشغيل الجرس">🔔</button>
-        <button id="update-button" class="text-button" type="button"><span>↥</span> تحديث</button>
-        <input id="update-file" type="file" accept=".schooldata,.db,.sqlite,.sqlite3,.json,application/json,application/octet-stream" hidden>
       </div>
     </header>
 
@@ -43,9 +41,9 @@
       <button id="dismiss-install" class="dismiss" type="button" aria-label="إخفاء">×</button>
       <div class="install-icon">▣</div>
       <div>
-        <h1 id="install-title">ثبّت التطبيق على iPhone</h1>
-        <p>من Safari اضغط <strong>مشاركة</strong>، ثم <strong>إضافة إلى الشاشة الرئيسية</strong>، وفعّل <strong>فتح كتطبيق ويب</strong>.</p>
-        <button id="install-help-button" class="primary-button compact" type="button">عرض خطوات التثبيت</button>
+        <h1 id="install-title">ثبّت التطبيق على جهازك أو سطح المكتب</h1>
+        <p>اضغط الزر ثم وافق على طلب المتصفح؛ وعلى iPhone استخدم <strong>إضافة إلى الشاشة الرئيسية</strong>.</p>
+        <button id="install-help-button" class="primary-button compact" type="button">تثبيت التطبيق</button>
       </div>
     </section>
 
@@ -119,7 +117,7 @@
 
     <section class="offline-note">
       <span>✓</span>
-      <p><strong>جاهز للعمل دون إنترنت.</strong> يعمل الجدول على توقيت مكة المكرمة الموحد، ويمكن تحديث البيانات من زر «تحديث».</p>
+      <p><strong>جاهز للعمل دون إنترنت.</strong> يعمل الجدول على توقيت مكة المكرمة الموحد، وتصل تحديثات التطبيق تلقائيًا عند الاتصال.</p>
     </section>
 
     <button id="waiting-button" class="waiting-fab" type="button" aria-label="عرض توزيع حصص الانتظار">
@@ -129,7 +127,7 @@
 
     <footer>
       <button id="reset-button" type="button">استعادة بيانات التطبيق الأصلية</button>
-      <span>الإصدار 1.5 PWA</span>
+      <span>الإصدار 1.5.2 PWA</span>
     </footer>
   </main>
 

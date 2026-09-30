@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#176b87">
-  <meta name="description" content="تنزيل تطبيق المدرسة والجرس الذكي لأجهزة Android وفتح تطبيق iPhone وتثبيته على الشاشة الرئيسية.">
+  <meta name="description" content="تنزيل تطبيق المدرسة والجرس الذكي وفتح نسخة PWA وتثبيتها على Android وiPhone وسطح المكتب.">
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./styles.css">
@@ -20,7 +20,7 @@
         <div>
           <span class="eyebrow">تطبيق الجوال المدرسي</span>
           <h1 id="app-title">المدرسة والجرس الذكي</h1>
-          <p class="lead">شاشة عرض عربية للجوال تعرض الساعة الدائرية والحصة الحالية وربطها بالفصل والمعلم والمادة، مع البحث حسب اليوم أو المعلم أو المادة. التعديل يبقى في برنامج الكمبيوتر ثم يُرفع ملف التحديث إلى الهاتف.</p>
+          <p class="lead">شاشة عرض عربية للجوال تعرض الساعة الدائرية والحصة الحالية وربطها بالفصل والمعلم والمادة، مع البحث حسب اليوم أو المعلم أو المادة. تصل تحديثات نسخة الويب تلقائيًا من GitHub Pages عند فتح التطبيق.</p>
           <div class="status"><span class="status-dot" aria-hidden="true"></span>Android وiPhone متاحان الآن</div>
         </div>
       </div>
@@ -36,16 +36,16 @@
         <div class="platform-download">
           <a class="download-button iphone-button" href="./iphone/">
             <span aria-hidden="true">↗</span>
-            فتح أو تثبيت تطبيق iPhone
+            فتح أو تثبيت نسخة الويب PWA
           </a>
-          <p class="platform-note">يفتح من Safari ويُضاف إلى الشاشة الرئيسية ويعمل دون إنترنت.</p>
+          <p class="platform-note">يفتح في المتصفح ويُثبت على الجهاز أو سطح المكتب ويعمل دون إنترنت.</p>
         </div>
       </div>
     </section>
 
     <section class="facts" aria-label="معلومات الإصدار">
-      <article><span>الإصدار</span><strong>1.5.0 (10)</strong></article>
-      <article><span>تاريخ البناء</span><strong>30 أغسطس 2026</strong></article>
+      <article><span>الإصدار</span><strong>1.5.1 (11)</strong></article>
+      <article><span>تاريخ البناء</span><strong>30 سبتمبر 2026</strong></article>
       <article><span>حجم APK</span><strong>68.75 MB</strong></article>
       <article><span>المنصات</span><strong>Android • iPhone وiPad</strong></article>
     </section>
@@ -54,7 +54,7 @@
       <article class="card">
         <h2>التحقق من الملف</h2>
         <p>قارن بصمة SHA-256 بعد التنزيل للتأكد أن الملف لم يتغير.</p>
-        <code id="sha-value">65da72c6394aaeff62191c22a5e3f629fd77a55e1675928f3a0139b6a0564b3c</code>
+        <code id="sha-value">e738f5605c391d9f52d19cb586f8f61e01e4cf8f618c9db1cd44ffb4df19e723</code>
         <button id="copy-sha" type="button">نسخ SHA-256</button>
         <a class="text-link" href="./downloads/SchoolApp.apk.sha256" download>تنزيل ملف البصمة</a>
         <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
@@ -81,11 +81,11 @@
       </article>
 
       <article class="card">
-        <h2>رفع تعديل الجدول</h2>
+        <h2>التحديث التلقائي للتطبيق</h2>
         <ol>
           <li>عدّل البيانات من برنامج المدرسة على الكمبيوتر.</li>
-          <li>صدّر ملف التحديث ثم انقله إلى الجوال.</li>
-          <li>اضغط «رفع تحديث» واختر الملف؛ يبقى وقت بداية الحصة الأولى الخاص بالجوال محفوظًا.</li>
+          <li>حدّث رقم إصدار PWA ثم ارفع النسخة الجديدة إلى GitHub Pages.</li>
+          <li>يفحص التطبيق الإصدار عند فتحه أو العودة إليه، ويطبّق التحديث تلقائيًا مع بقاء البيانات المحلية.</li>
         </ol>
       </article>
     </section>
@@ -93,15 +93,15 @@
     <section id="iphone-status" class="iphone-status-card" aria-labelledby="iphone-title">
       <div>
         <span class="availability-badge">متاح الآن</span>
-        <h2 id="iphone-title">تثبيت التطبيق على iPhone</h2>
-        <p>اضغط زر «فتح أو تثبيت تطبيق iPhone» أعلاه، ثم نفّذ الخطوات مرة واحدة:</p>
+        <h2 id="iphone-title">تثبيت PWA على Android وiPhone</h2>
+        <p>اضغط زر «فتح أو تثبيت نسخة الويب PWA» أعلاه، ثم نفّذ الخطوات المناسبة لجهازك مرة واحدة:</p>
         <ol>
-          <li>افتح التطبيق في Safari واضغط «مشاركة».</li>
-          <li>اختر «إضافة إلى الشاشة الرئيسية».</li>
-          <li>فعّل «فتح كتطبيق ويب» ثم اضغط «إضافة».</li>
+          <li>على Android أو سطح المكتب اضغط «تثبيت التطبيق» ثم وافق على طلب المتصفح.</li>
+          <li>على iPhone افتح التطبيق في Safari واضغط «مشاركة»، ثم «إضافة إلى الشاشة الرئيسية».</li>
+          <li>على iPhone فعّل «فتح كتطبيق ويب» ثم اضغط «إضافة».</li>
           <li>افتح أيقونة «المدرسة والجرس» من الشاشة الرئيسية.</li>
         </ol>
-        <p>بعد أول فتح كامل تُحفظ بيانات المدرسة محليًا ويعمل التطبيق دون إنترنت، ويمكن رفع ملف التحديث من داخل التطبيق.</p>
+        <p>بعد أول فتح كامل تُحفظ بيانات المدرسة محليًا ويعمل التطبيق دون إنترنت، وتصل تحديثاته تلقائيًا عند توفر الاتصال.</p>
       </div>
     </section>
 

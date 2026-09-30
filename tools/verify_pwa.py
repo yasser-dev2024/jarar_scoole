@@ -1,4 +1,4 @@
-"""Static verification for the installable iPhone PWA."""
+"""Static verification for the installable Android and iPhone PWA."""
 
 from __future__ import annotations
 
@@ -18,6 +18,12 @@ def main() -> None:
     assert manifest["start_url"].startswith("./")
     assert manifest["scope"] == "./"
     assert any(icon["sizes"] == "192x192" for icon in manifest["icons"])
+    assert any(icon["sizes"] == "512x512" for icon in manifest["icons"])
+    for icon in manifest["icons"]:
+        assert icon["src"].startswith("./")
+        assert (IPHONE / icon["src"]).is_file()
+
+    published_version = json.loads((IPHONE / "version.json").read_text("utf-8"))["version"]
 
     data = json.loads((IPHONE / "data" / "default-data.json").read_text("utf-8"))
     required = {
@@ -31,7 +37,7 @@ def main() -> None:
     assert required <= data["tables"].keys()
     assert data["tables"]["app_settings"]
     assert data["tables"]["schedule_entries"]
-    assert data.get("data_version", 0) >= 9
+    assert data.get("data_version", 0) >= 10
     assert len(data["tables"]["assignments"]) == 462
     assert len({row["class_id"] for row in data["tables"]["assignments"]}) == 14
     assert {row["day_of_week"] for row in data["tables"]["assignments"]} == set(range(5))
@@ -57,8 +63,9 @@ def main() -> None:
     }
     assert assignments[("1/4", 0, 2)] == ("علوم", "أحمد الخيري")
     assert assignments[("1/4", 0, 3)] == ("القران والدراسات", "عبدالرحمن ال حموض")
-    assert assignments[("4/4", 3, 5)] == ("رياضيات", "بريق القرني")
-    assert assignments[("4/5", 4, 4)] == ("رياضيات", "حسين الزيداني")
+    assert assignments[("4/4", 1, 5)] == ("لغتي", "علي الشريف")
+    assert assignments[("4/5", 2, 1)] == ("رياضيات", "حسين الزيداني")
+    assert assignments[("2/6", 1, 6)] == ("علوم", "عبدالعزيز القصادي")
     assert assignments[("5/5", 2, 3)] == ("نشاط", "بكري عسيري")
     assert not any(
         teachers[row["teacher_id"]] == "عبدالكريم القحطاني"
@@ -74,13 +81,15 @@ def main() -> None:
     assert waiting_by_order[1]["waiting_1"] == 2
     assert waiting_by_order[8]["reserve_count"] == 0
     assert waiting_by_order[24]["teacher_name"] == "بكري عسيري"
-    assert waiting_by_order[31]["waiting_3"] == 1
+    assert waiting_by_order[18]["waiting_1"] == 1
+    assert waiting_by_order[27]["reserve_count"] == 0
+    assert waiting_by_order[31]["waiting_3"] == 2
 
     service_worker = (IPHONE / "sw.js").read_text("utf-8")
     application = (IPHONE / "app.js").read_text("utf-8")
     styles = (IPHONE / "styles.css").read_text("utf-8")
-    assert "const APP_VERSION = '1.5.0';" in application
-    assert "const BUNDLED_DATA_VERSION = 9;" in application
+    assert f"const APP_VERSION = '{published_version}';" in application
+    assert "const BUNDLED_DATA_VERSION = 10;" in application
     assert "const SCHOOL_TIME_ZONE = 'Asia/Riyadh';" in application
     assert "const MINIMUM_BELL_GAP_MS = 2000;" in application
     assert "timeZone: SCHOOL_TIME_ZONE" in application
@@ -97,7 +106,24 @@ def main() -> None:
     assert "waiting_allocations" in application
     assert 'id="waiting-button"' in (IPHONE / "index.html").read_text("utf-8")
     assert "waiting-fab" in styles
-    assert "school-smart-pwa-v1.5.0-schedule-9-waiting-ios-bell" in service_worker
+    assert f"const APP_VERSION = '{published_version}';" in service_worker
+    assert "const CACHE_PREFIX = 'school-smart-pwa-';" in service_worker
+    assert "self.skipWaiting()" in service_worker
+    assert "self.clients.claim()" in service_worker
+    assert "key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME" in service_worker
+    assert "cache: 'no-store'" in service_worker
+    assert "VERSION_URL" in service_worker
+    assert "client.navigate(client.url)" in service_worker
+    app_shell_source = service_worker.split("const APP_SHELL = [", 1)[1].split("];", 1)[0]
+    assert "version.json" not in app_shell_source
+    assert "UPDATE_CHECK_COOLDOWN_MS" in application
+    assert "fetch('./version.json'" in application
+    assert "registration.update()" in application
+    assert "window.addEventListener('load'" in application
+    assert "document.addEventListener('visibilitychange'" in application
+    assert "update-button" not in application
+    assert 'id="update-button"' not in (IPHONE / "index.html").read_text("utf-8")
+    assert 'id="update-file"' not in (IPHONE / "index.html").read_text("utf-8")
     expected_sounds = {
         *(f"period_{number}_{event}.mp3" for number in range(1, 8) for event in ("start", "end")),
         "break_start.mp3",
@@ -116,7 +142,7 @@ def main() -> None:
     landing_page = (ROOT / "index.html").read_text("utf-8")
     assert 'href="./iphone/"' in landing_page
     assert "Android وiPhone متاحان الآن" in landing_page
-    assert "1.5.0 (10)" in landing_page
+    assert "1.5.1 (11)" in landing_page
     apk = ROOT / "downloads" / "SchoolApp.apk"
     apk_digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     checksum = (ROOT / "downloads" / "SchoolApp.apk.sha256").read_text("utf-8")

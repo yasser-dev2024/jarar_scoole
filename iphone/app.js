@@ -1,14 +1,16 @@
 'use strict';
 
-const APP_VERSION = '1.5.0';
-const BUNDLED_DATA_VERSION = 9;
+const APP_VERSION = '1.5.2';
+const BUNDLED_DATA_VERSION = 10;
 const SCHOOL_TIME_ZONE = 'Asia/Riyadh';
 const MINIMUM_BELL_GAP_MS = 2000;
+const UPDATE_CHECK_COOLDOWN_MS = 60_000;
+const UPDATE_ATTEMPT_KEY = 'school-pwa-update-attempt';
 const STORAGE_DB = 'school-smart-pwa';
 const STORAGE_STORE = 'app-data';
 const DATA_KEY = 'dataset';
 const BELL_KEY = 'school-pwa-bell-enabled';
-const INSTALL_DISMISSED_KEY = 'school-pwa-install-dismissed';
+const INSTALL_DISMISSED_KEY = 'school-pwa-install-dismissed-v2';
 const DATA_FALLBACK_KEY = 'school-pwa-dataset-fallback';
 const TRANSFER_SIGNING_KEY = 'SchoolOfflineSuite-DataTransfer-Integrity-2026';
 const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
@@ -41,8 +43,6 @@ const elements = {
   nextLinksCount: document.getElementById('next-links-count'),
   nextLinksTitle: document.getElementById('next-links-title'),
   schedule: document.getElementById('schedule-list'),
-  updateButton: document.getElementById('update-button'),
-  updateFile: document.getElementById('update-file'),
   bellButton: document.getElementById('bell-button'),
   wakeButton: document.getElementById('wake-button'),
   waitingButton: document.getElementById('waiting-button'),
@@ -66,6 +66,9 @@ const runtime = {
   wakeLock: null,
   keepAwake: false,
   deferredInstallPrompt: null,
+  serviceWorkerRegistrationPromise: null,
+  updateCheckPromise: null,
+  lastUpdateCheckAt: 0,
   sql: null,
 };
 
@@ -486,6 +489,14 @@ function renderInstallState() {
 }
 
 function showInstallHelp() {
+  if (!IS_IOS) {
+    openModal(`
+      <h2 id="modal-title">تثبيت التطبيق على الجهاز</h2>
+      <p>افتح قائمة المتصفح واختر <strong>تثبيت التطبيق</strong> أو <strong>إضافة إلى الشاشة الرئيسية</strong>، ثم وافق على طلب التثبيت.</p>
+      <p><strong>بعد الموافقة يثبّت المتصفح التطبيق تلقائيًا ويظهر اختصاره على الجهاز أو سطح المكتب.</strong></p>
+    `);
+    return;
+  }
   openModal(`
     <h2 id="modal-title">تثبيت التطبيق على iPhone</h2>
     <p>نفّذ الخطوات مرة واحدة من Safari، وبعدها سيفتح التطبيق من أيقونته مباشرة.</p>
@@ -725,9 +736,65 @@ function updateConnectionState() {
   elements.connection.textContent = navigator.onLine ? 'يعمل محليًا • متصل' : 'يعمل دون إنترنت';
 }
 
-async function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) return;
-  try { await navigator.serviceWorker.register('./sw.js', { scope: './' }); } catch (_) { /* App still works online. */ }
+function compareVersions(left, right) {
+  const leftParts = String(left).split('.').map((part) => Number.parseInt(part, 10) || 0);
+  const rightParts = String(right).split('.').map((part) => Number.parseInt(part, 10) || 0);
+  const length = Math.max(leftParts.length, rightParts.length);
+  for (let index = 0; index < length; index += 1) {
+    const difference = (leftParts[index] || 0) - (rightParts[index] || 0);
+    if (difference) return difference;
+  }
+  return 0;
+}
+
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return Promise.resolve(null);
+  if (!runtime.serviceWorkerRegistrationPromise) {
+    runtime.serviceWorkerRegistrationPromise = navigator.serviceWorker.register('./sw.js', {
+      scope: './',
+      updateViaCache: 'none',
+    }).catch(() => null);
+  }
+  return runtime.serviceWorkerRegistrationPromise;
+}
+
+async function runUpdateCheck() {
+  if (!navigator.onLine) return;
+  const response = await fetch('./version.json', {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache' },
+  });
+  if (!response.ok) return;
+  const published = await response.json();
+  const publishedVersion = String(published?.version || '').trim();
+  if (!/^\d+(?:\.\d+){1,3}$/.test(publishedVersion)) return;
+  if (compareVersions(publishedVersion, APP_VERSION) <= 0) return;
+  if (sessionStorage.getItem(UPDATE_ATTEMPT_KEY) === publishedVersion) return;
+
+  sessionStorage.setItem(UPDATE_ATTEMPT_KEY, publishedVersion);
+  const registration = await registerServiceWorker();
+  if (!registration) {
+    sessionStorage.removeItem(UPDATE_ATTEMPT_KEY);
+    return;
+  }
+  try {
+    await registration.update();
+  } catch (error) {
+    sessionStorage.removeItem(UPDATE_ATTEMPT_KEY);
+    throw error;
+  }
+  if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+}
+
+function checkForAppUpdate() {
+  const now = Date.now();
+  if (runtime.updateCheckPromise) return runtime.updateCheckPromise;
+  if (now - runtime.lastUpdateCheckAt < UPDATE_CHECK_COOLDOWN_MS) return Promise.resolve();
+  runtime.lastUpdateCheckAt = now;
+  runtime.updateCheckPromise = runUpdateCheck()
+    .catch(() => { /* Offline and transient server failures must not interrupt the app. */ })
+    .finally(() => { runtime.updateCheckPromise = null; });
+  return runtime.updateCheckPromise;
 }
 
 function bindEvents() {
@@ -736,21 +803,6 @@ function bindEvents() {
     renderLinks();
   });
   elements.search.addEventListener('input', renderLinks);
-  elements.updateButton.addEventListener('click', () => elements.updateFile.click());
-  elements.updateFile.addEventListener('change', async () => {
-    const file = elements.updateFile.files && elements.updateFile.files[0];
-    if (!file) return;
-    elements.updateButton.disabled = true;
-    try {
-      await importUpdate(file);
-      showToast(`تم تطبيق تحديث ${file.name} وحفظه على الجهاز.`);
-    } catch (error) {
-      showToast(`تعذر تطبيق التحديث: ${error.message || error}`, true);
-    } finally {
-      elements.updateButton.disabled = false;
-      elements.updateFile.value = '';
-    }
-  });
   elements.bellButton.addEventListener('click', toggleBell);
   elements.wakeButton.addEventListener('click', requestWakeLock);
   elements.waitingButton.addEventListener('click', showWaitingDistribution);
@@ -785,11 +837,20 @@ function bindEvents() {
     event.preventDefault();
     runtime.deferredInstallPrompt = event;
   });
-  window.addEventListener('appinstalled', renderInstallState);
-  window.addEventListener('online', updateConnectionState);
+  window.addEventListener('appinstalled', () => {
+    elements.installCard.hidden = true;
+    renderInstallState();
+  });
+  window.addEventListener('load', () => { void checkForAppUpdate(); });
+  window.addEventListener('online', () => {
+    updateConnectionState();
+    void checkForAppUpdate();
+  });
   window.addEventListener('offline', updateConnectionState);
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && runtime.keepAwake && !runtime.wakeLock) {
+    if (document.visibilityState !== 'visible') return;
+    void checkForAppUpdate();
+    if (runtime.keepAwake && !runtime.wakeLock) {
       try { runtime.wakeLock = await navigator.wakeLock.request('screen'); } catch (_) { /* User can retry. */ }
     }
   });
@@ -824,6 +885,7 @@ async function start() {
       if (now.getSeconds() === 0) renderIdentity(now);
     }, 1000);
     await registerServiceWorker();
+    void checkForAppUpdate();
   } catch (error) {
     elements.boot.querySelector('span').textContent = `تعذر تشغيل التطبيق: ${error.message || error}`;
     elements.boot.querySelector('.boot-bar').hidden = true;

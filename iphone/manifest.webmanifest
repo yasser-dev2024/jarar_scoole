@@ -2,7 +2,7 @@
   "id": "./",
   "name": "المدرسة والجرس الذكي",
   "short_name": "المدرسة والجرس",
-  "description": "العرض المدرسي والجدول والجرس على iPhone دون إنترنت.",
+  "description": "العرض المدرسي والجدول والجرس على Android وiPhone دون إنترنت.",
   "lang": "ar",
   "dir": "rtl",
   "start_url": "./?source=home-screen",
@@ -20,8 +20,8 @@
       "purpose": "any maskable"
     },
     {
-      "src": "./icons/icon-1024.png",
-      "sizes": "1024x1024",
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }

@@ -1,8 +1,11 @@
 'use strict';
 
-const CACHE_NAME = 'school-smart-pwa-v1.5.0-schedule-9-waiting-ios-bell';
+const APP_VERSION = '1.5.2';
+const CACHE_PREFIX = 'school-smart-pwa-';
+const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}`;
+const INDEX_URL = new URL('./index.html', self.registration.scope).href;
+const VERSION_URL = new URL('./version.json', self.registration.scope).href;
 const APP_SHELL = [
-  './',
   './index.html',
   './styles.css',
   './app.js',
@@ -10,6 +13,7 @@ const APP_SHELL = [
   './data/default-data.json',
   './icons/apple-touch-icon.png',
   './icons/icon-192.png',
+  './icons/icon-512.png',
   './icons/icon-1024.png',
   './sounds/school_bell.wav',
   './sounds/class_start.wav',
@@ -37,43 +41,71 @@ const APP_SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const requests = APP_SHELL.map((path) => new Request(path, { cache: 'reload' }));
+    await cache.addAll(requests);
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim()),
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    const outdatedAppCaches = keys.filter(
+      (key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME,
+    );
+    await Promise.all(outdatedAppCaches.map((key) => caches.delete(key)));
+    await self.clients.claim();
+
+    if (outdatedAppCaches.length) {
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      clients.forEach((client) => {
+        void client.navigate(client.url).catch(() => null);
+      });
+    }
+  })());
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') void self.skipWaiting();
 });
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const requestUrl = new URL(event.request.url);
   if (requestUrl.origin !== self.location.origin) return;
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const copy = response.clone();
-          void caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
-          return response;
-        })
-        .catch(() => caches.match('./index.html')),
-    );
+
+  if (requestUrl.href === VERSION_URL) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
-  event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then((cached) => cached || fetch(event.request).then((response) => {
-      if (response.ok) {
-        const copy = response.clone();
-        void caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith((async () => {
+      try {
+        const response = await fetch(event.request, { cache: 'no-store' });
+        if (response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(INDEX_URL, response.clone());
+        }
+        return response;
+      } catch (_) {
+        const cache = await caches.open(CACHE_NAME);
+        return (await cache.match(INDEX_URL)) || Response.error();
       }
-      return response;
-    })),
-  );
+    })());
+    return;
+  }
+
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const cached = await cache.match(event.request, { ignoreSearch: true });
+    if (cached) return cached;
+    const response = await fetch(event.request);
+    if (response.ok && response.type === 'basic') await cache.put(event.request, response.clone());
+    return response;
+  })());
 });
 
 self.addEventListener('notificationclick', (event) => {
