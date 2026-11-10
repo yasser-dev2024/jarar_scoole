@@ -1,7 +1,7 @@
 'use strict';
 
-const APP_VERSION = '1.5.2';
-const BUNDLED_DATA_VERSION = 10;
+const APP_VERSION = '1.5.3';
+const BUNDLED_DATA_VERSION = 11;
 const SCHOOL_TIME_ZONE = 'Asia/Riyadh';
 const MINIMUM_BELL_GAP_MS = 2000;
 const UPDATE_CHECK_COOLDOWN_MS = 60_000;

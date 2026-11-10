@@ -1,6 +1,6 @@
 'use strict';
 
-const APP_VERSION = '1.5.2';
+const APP_VERSION = '1.5.3';
 const CACHE_PREFIX = 'school-smart-pwa-';
 const CACHE_NAME = `${CACHE_PREFIX}v${APP_VERSION}`;
 const INDEX_URL = new URL('./index.html', self.registration.scope).href;

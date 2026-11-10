@@ -34,7 +34,7 @@
 
 - ملفات التطبيق موجودة في `iphone/`.
 - حدّث `iphone/data/default-data.json` بتشغيل `tools/export_pwa_data.py` على قاعدة البيانات المضمنة.
-- قبل نشر أي تغيير شغّل `python tools/bump_pwa_version.py 1.5.2` مع رقم الإصدار الجديد؛ يحدّث الأمر `version.json` ونسخة التطبيق وService Worker معًا، ويتحقق `tools/verify_pwa.py` من تطابقها قبل النشر.
+- قبل نشر أي تغيير شغّل `python tools/bump_pwa_version.py 1.5.4` مع رقم الإصدار الجديد؛ يحدّث الأمر `version.json` ونسخة التطبيق وService Worker معًا، ويتحقق `tools/verify_pwa.py` من تطابقها قبل النشر.
 - يطلب التطبيق `version.json` دون Cache عند الفتح وعند العودة من الخلفية، ثم يفعّل Service Worker الجديد ويعيد التحميل مرة واحدة تلقائيًا.
 - لا تحذف ذاكرة Cache يدويًا؛ يحذف Service Worker ذاكرات ملفات التطبيق القديمة فقط ولا يلمس `localStorage` أو `IndexedDB`.
 - لا تعتمد واجهة iPhone على CDN؛ مكتبات القراءة والأصوات والأيقونات محفوظة داخل الموقع لتعمل دون إنترنت.

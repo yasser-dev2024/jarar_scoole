@@ -36,19 +36,20 @@ def main() -> None:
     }
     assert required <= data["tables"].keys()
     assert data["tables"]["app_settings"]
+    assert data["tables"]["app_settings"][0]["day_start_time"] == "07:30"
     assert data["tables"]["schedule_entries"]
-    assert data.get("data_version", 0) >= 10
+    assert data.get("data_version", 0) >= 11
     assert len(data["tables"]["assignments"]) == 462
     assert len({row["class_id"] for row in data["tables"]["assignments"]}) == 14
     assert {row["day_of_week"] for row in data["tables"]["assignments"]} == set(range(5))
     entries = sorted(data["tables"]["schedule_entries"], key=lambda row: row["sort_order"])
     lessons = [row for row in entries if row["entry_type"] == "lesson"]
     assert len(lessons) == 7
-    assert lessons[0]["start_time"] == "07:00:00"
-    assert lessons[0]["end_time"] == "07:45:00"
+    assert lessons[0]["start_time"] == "07:30:00"
+    assert lessons[0]["end_time"] == "08:15:00"
     assert lessons[1]["title"] == "الحصة الثانية"
-    assert lessons[1]["start_time"] == "07:45:18"
-    assert lessons[1]["end_time"] == "08:30:18"
+    assert lessons[1]["start_time"] == "08:15:18"
+    assert lessons[1]["end_time"] == "09:00:18"
     assert lessons[2]["title"] == "الحصة الثالثة"
     classes = {row["id"]: row["class_name"] for row in data["tables"]["classes"]}
     teachers = {row["id"]: row["teacher_name"] for row in data["tables"]["teachers"]}
@@ -89,7 +90,7 @@ def main() -> None:
     application = (IPHONE / "app.js").read_text("utf-8")
     styles = (IPHONE / "styles.css").read_text("utf-8")
     assert f"const APP_VERSION = '{published_version}';" in application
-    assert "const BUNDLED_DATA_VERSION = 10;" in application
+    assert "const BUNDLED_DATA_VERSION = 11;" in application
     assert "const SCHOOL_TIME_ZONE = 'Asia/Riyadh';" in application
     assert "const MINIMUM_BELL_GAP_MS = 2000;" in application
     assert "timeZone: SCHOOL_TIME_ZONE" in application
@@ -142,7 +143,7 @@ def main() -> None:
     landing_page = (ROOT / "index.html").read_text("utf-8")
     assert 'href="./iphone/"' in landing_page
     assert "Android وiPhone متاحان الآن" in landing_page
-    assert "1.5.1 (11)" in landing_page
+    assert "1.5.3 (12)" in landing_page
     apk = ROOT / "downloads" / "SchoolApp.apk"
     apk_digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     checksum = (ROOT / "downloads" / "SchoolApp.apk.sha256").read_text("utf-8")
